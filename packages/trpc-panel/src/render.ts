@@ -54,15 +54,15 @@ function injectInString(
   );
 }
 
-// renders value should never change unless the server is restarted, just parse and inject once
-let cache: {
-  val: string | null;
-} = {
-  val: null,
-};
+// renders value should never change unless the router is changed, just parse and inject once
+const caches = new WeakMap<Router<any>, string>();
 
 export function renderTrpcPanel(router: Router<any>, options: RenderOptions) {
-  if (cache.val) return cache.val;
+  const cache = caches.get(router);
+  if (cache) {
+    return cache;
+  }
+
   const bundleInjectionParams: InjectionParam[] = [
     {
       searchFor: routerReplaceSymbol,
@@ -91,6 +91,7 @@ export function renderTrpcPanel(router: Router<any>, options: RenderOptions) {
       injectString: css,
     },
   ];
-  cache.val = injectParams(indexHtml, htmlReplaceParams);
-  return cache.val;
+  const val = injectParams(indexHtml, htmlReplaceParams);
+  caches.set(router, val);
+  return val;
 }
